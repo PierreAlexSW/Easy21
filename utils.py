@@ -80,3 +80,10 @@ def get_value(action_value):
             Value[i,j] = np.amax(action_value[i,j])
     return Value
 
+def get_policy(action_value):
+    Value = np.zeros((10,21))
+    for i in range(len(Value)):
+        for j in range(len(Value[0])):
+            Value[i,j] = np.argmax(action_value[i,j])
+    return Value
+
