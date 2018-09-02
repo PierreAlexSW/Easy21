@@ -5,12 +5,12 @@ from Environment import Easy21
 from scipy.sparse import diags
 
 
-def montecarlo(iterations, N0, discount_factor):
+def montecarlo(iterations, N0, discount_factor, true_value):
     """Computes Monte-Carlo algorithm"""
     actions = ["Hit", "Stick"]
     action_value = np.array([[[0.0,0.0] for i in range(0,22)] for j in range(10)])
     number_action_value = np.array([[[0,0] for i in range(0,22)] for j in range(10)])
-    
+    deltas = []
     for it in range(iterations):
         """plays one episode"""
         game = Easy21()
@@ -43,7 +43,7 @@ def montecarlo(iterations, N0, discount_factor):
             number_action_value[dealer-1, player_sum, index_action]+=1
             Gt+=reward*discount_factor**k
             k+=1
-
+        delta = 0
         """episode ended"""
         for step in visits:
             state = step[0]
@@ -51,8 +51,12 @@ def montecarlo(iterations, N0, discount_factor):
             dealer, player_sum = state["dealer"], state["player_sum"]
             delta_action_value = (Gt - action_value[dealer-1, player_sum, action] ) / number_action_value[dealer-1, player_sum, action]
             action_value[dealer-1, player_sum, action] += delta_action_value
-    
-    return action_value
+            delta+=abs(delta_action_value)
+        #deltas.append(delta)
+        
+        deltas.append(np.linalg.norm(true_value-get_value(action_value))**2/(10*21))
+
+    return action_value, deltas
 
 
 
