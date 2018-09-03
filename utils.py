@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from Environment import Easy21
 from scipy.sparse import diags
 
-<<<<<<< HEAD
 def policy_epsilon_greedy(N0, dealer, player_sum, action_value, number_action_value):
         """Pick action epsilon-greedily"""
         action_value_ij = action_value[dealer-1, player_sum]
@@ -22,22 +21,18 @@ def policy_epsilon_greedy(N0, dealer, player_sum, action_value, number_action_va
              index_action = np.random.binomial(1,0.5)
         return index_action
     
-def montecarlo(iterations, N0, discount_factor):
-    actions = ["Hit", "Stick"]
-    action_value = np.array([[[0.0,0.0] for i in range(0,22)] for j in range(10)])
-    number_action_value = np.array([[[0,0] for i in range(0,22)] for j in range(10)])
-    deltas_tot = []
-=======
-
-def montecarlo(iterations, N0, discount_factor, true_value):
+def montecarlo(iterations,it_conf, N0, discount_factor, true_value):
     """Computes Monte-Carlo algorithm"""
     actions = ["Hit", "Stick"]
     action_value = np.array([[[0.0,0.0] for i in range(0,22)] for j in range(10)])
     number_action_value = np.array([[[0,0] for i in range(0,22)] for j in range(10)])
     deltas = []
->>>>>>> 1416019c03daaa652cdfbe1b405a43fd93d61ae4
+    variance = []
+    
     for it in range(iterations):
-        deltas = []
+        if it%it_conf==0:
+            print("Iteration n°{}/{}".format(it/int(1e3), iterations/int(1e3)))
+        var = 0
         """plays one episode"""
         game = Easy21()
         Gt = 0
@@ -65,19 +60,12 @@ def montecarlo(iterations, N0, discount_factor, true_value):
             action = step[1]
             dealer, player_sum = state["dealer"], state["player_sum"]
             delta_action_value = (Gt - action_value[dealer-1, player_sum, action] ) / number_action_value[dealer-1, player_sum, action]
-            deltas.append(delta_action_value)
             action_value[dealer-1, player_sum, action] += delta_action_value
-<<<<<<< HEAD
-        deltas_tot.append(sum(deltas))
-    return action_value, deltas_tot
-=======
-            delta+=abs(delta_action_value)
-        #deltas.append(delta)
-        
+            var+=abs(delta_action_value)
+        variance.append(var)
         deltas.append(np.linalg.norm(true_value-get_value(action_value))**2/(10*21))
 
-    return action_value, deltas
->>>>>>> 1416019c03daaa652cdfbe1b405a43fd93d61ae4
+    return action_value, deltas, variance
 
 
 
