@@ -3,12 +3,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Environment import Easy21
 
+def policy_epsilon_greedy(N0, dealer, player_sum, action_value, number_action_value):
+        """Pick action epsilon-greedily"""
+        action_value_ij = action_value[dealer-1, player_sum]
+        epsilon_t = N0 / (N0 + sum(number_action_value[dealer-1, player_sum,:]) )
+        p = np.random.binomial(1,epsilon_t)
+        max_index = np.argmax(action_value_ij)
+        min_index = np.argmin(action_value_ij)
+        if max_index!=min_index:
+            if p == 0:
+                index_action = max_index
+
+            else:
+                index_action = min_index
+        else:
+             index_action = np.random.binomial(1,0.5)
+        return index_action
+    
 def montecarlo(iterations, N0, discount_factor):
     actions = ["Hit", "Stick"]
     action_value = np.array([[[0.0,0.0] for i in range(0,22)] for j in range(10)])
     number_action_value = np.array([[[0,0] for i in range(0,22)] for j in range(10)])
-    
+    deltas_tot = []
     for it in range(iterations):
+        deltas = []
         """plays one episode"""
         game = Easy21()
         Gt = 0
@@ -21,18 +39,7 @@ def montecarlo(iterations, N0, discount_factor):
 
 
             ##Pick action epsilon-greedily
-            epsilon_t = N0 / (N0 + sum(number_action_value[dealer-1, player_sum,:]) )
-            p = np.random.binomial(1,epsilon_t)
-            max_index = np.argmax(action_value_ij)
-            min_index = np.argmin(action_value_ij)
-            if max_index!=min_index:
-                if p == 0:
-                    index_action = max_index
-
-                else:
-                    index_action = min_index
-            else:
-                 index_action = np.random.binomial(1,0.5)
+            index_action = policy_epsilon_greedy(N0, dealer, player_sum, action_value, number_action_value)
             pick_action = actions[index_action]
 
             state,reward = game.step(pick_action)
@@ -47,9 +54,10 @@ def montecarlo(iterations, N0, discount_factor):
             action = step[1]
             dealer, player_sum = state["dealer"], state["player_sum"]
             delta_action_value = (Gt - action_value[dealer-1, player_sum, action] ) / number_action_value[dealer-1, player_sum, action]
+            deltas.append(delta_action_value)
             action_value[dealer-1, player_sum, action] += delta_action_value
-    
-    return action_value
+        deltas_tot.append(sum(deltas))
+    return action_value, deltas_tot
 
 
 ##plotting
