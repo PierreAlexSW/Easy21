@@ -69,7 +69,7 @@ def montecarlo(iterations,it_conf, N0, discount_factor, true_value):
 
 
 
-def plot_value_function(action_value, cm, title = "Value function", degree = None):
+def plot_value_function(value_function, cm, title = "Value function", degree = None):
     """Plot the value function"""
     fig5 = plt.figure(figsize=(20, 10))
     ax = fig5.add_subplot(111, projection='3d')
@@ -77,7 +77,7 @@ def plot_value_function(action_value, cm, title = "Value function", degree = Non
     _x = np.arange(1,11,1)
     _y = np.arange(1,22,1)
     X,Y = np.meshgrid(_y,_x)
-    Z = action_value
+    Z = value_function
 
     surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1,
                            cmap= cm, vmin=-1.0, vmax=1.0)
@@ -95,7 +95,7 @@ def get_value(action_value):
     Value = np.zeros((10,21))
     for i in range(len(Value)):
         for j in range(len(Value[0])):
-            Value[i,j] = np.amax(action_value[i,j])
+            Value[i,j] = np.amax(action_value[i,j+1])
     return Value
 
 def get_policy(action_value):
