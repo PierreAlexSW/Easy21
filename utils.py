@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from Environment import Easy21
 from scipy.sparse import diags
 
+
+
 def policy_epsilon_greedy(N0, dealer, player_sum, action_value, number_action_value):
         """Pick action epsilon-greedily"""
         action_value_ij = action_value[dealer-1, player_sum]
@@ -67,6 +69,57 @@ def montecarlo(iterations,it_conf, N0, discount_factor, true_value):
 
     return action_value, deltas, variance
 
+def td_lambda_backward_view(iterations, N0, discount_factor, Lambda, value_star):
+    MSEs = []
+    actions = ["Hit", "Stick"]
+    action_value = np.array([[[0.0,0.0] for i in range(0,22)] for j in range(10)])
+    number_action_value = np.array([[[0.0,0.0] for i in range(0,22)] for j in range(10)])
+    eligibility_traces = None 
+
+    for it in range(iterations):
+        
+        """plays one episode"""
+        eligibility_traces = np.array([[[0.0,0.0] for i in range(0,22)] for j in range(10)])
+        game = Easy21()
+        visits = []
+        ##Action chosen epsilon-greedily
+        first_state = game.state
+        index_action = policy_epsilon_greedy(N0, first_state["dealer"], first_state["player_sum"], action_value, number_action_value)
+        """plays game epsilon-greedily"""
+        while game.isTerminal == False:
+            
+            last_state = game.state
+            dealer, player_sum = last_state["dealer"], last_state["player_sum"]
+            
+           
+            
+            pick_action = actions[index_action]
+            number_action_value[dealer-1, player_sum, index_action]+=1
+            alpha = 1/number_action_value[dealer-1, player_sum, index_action]
+            
+            _,reward = game.step(pick_action)
+            eligibility_traces[dealer-1, player_sum, index_action]+=1
+
+            if game.isTerminal == False:
+                next_state = game.state
+                next_dealer , next_player_sum = next_state["dealer"], next_state["player_sum"]
+                next_index_action = policy_epsilon_greedy(N0, next_dealer, next_player_sum, action_value, number_action_value)
+                target = reward + discount_factor * action_value[next_dealer-1, next_player_sum, next_index_action]
+                index_action = next_index_action
+
+            else: 
+                target = reward
+            delta = target - action_value[dealer-1, player_sum, index_action]
+            delta_tot = eligibility_traces * delta  * alpha
+            ##We update all states and actions
+            action_value += delta_tot
+             
+            eligibility_traces = discount_factor * Lambda * eligibility_traces
+        """episode ended"""
+       
+        error_episode = np.linalg.norm(get_value(action_value)-value_star)**2 / (2 * 22 * 10)
+        MSEs.append(error_episode)
+    return MSEs, action_value
 
 
 def plot_value_function(value_function, cm, title = "Value function", degree = None):
